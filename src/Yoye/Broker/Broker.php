@@ -3,6 +3,7 @@
 namespace Yoye\Broker;
 
 use Predis\Client;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Broker
@@ -35,8 +36,12 @@ class Broker
      */
     private $eventDispatcher;
 
-    function __construct(Client $predisClient, $channel, EventDispatcherInterface $eventDispatcher)
+    function __construct(Client $predisClient, $channel, EventDispatcherInterface $eventDispatcher = null)
     {
+        if ($eventDispatcher === null) {
+            $eventDispatcher = new EventDispatcher();
+        }
+
         $this->predisClient     = $predisClient;
         $this->channel          = $channel;
         $this->temporaryChannel = $channel . '.temporary';
