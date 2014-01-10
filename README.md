@@ -42,5 +42,20 @@ $broker->run();
 ```
 
 Now type in your console
+
 ```
-php
+php broker.php
+```
+
+On another console type
+
+```
+redis-cli LPUSH foo.channel 'This is a message'
+```
+
+Return on your first console, you should see
+
+```
+string(11) "foo.channel"
+string(17) "This is a message"
+```
