@@ -5,7 +5,7 @@ Redis messsage broker writing in PHP
 
 ### Installation
 
-The recommended way to install mangopay-sdk is through [Composer](http://getcomposer.org/)
+The recommended way to install redis-broker is through [Composer](http://getcomposer.org/)
 
 ```
 composer require "yoye/redis-broker": "dev-master"
