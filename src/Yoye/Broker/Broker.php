@@ -7,12 +7,12 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 
 class Broker
 {
-
     /**
      * Event name for new message received 
      */
+
     const MESSAGE_RECEIVED = 'redis-broker.message.received';
-    
+
     /**
      * @var Client
      */
@@ -71,7 +71,7 @@ class Broker
 
         while (true) {
             $message = $this->listen();
-            $event = new MessageEvent($this->channel, $message);
+            $event   = new MessageEvent($this->channel, $message);
 
             $this->eventDispatcher->dispatch(self::MESSAGE_RECEIVED, $event);
 
@@ -84,6 +84,16 @@ class Broker
     }
 
     /**
+     * Add message to the queue broker
+     * 
+     * @param string $message
+     */
+    public function queue($message)
+    {
+        $this->predisClient->lpush($this->channel, $message);
+    }
+
+    /**
      * Listen on channel
      * 
      * @return mixed
@@ -91,16 +101,6 @@ class Broker
     protected function listen()
     {
         return $this->predisClient->brpoplpush($this->channel, $this->temporaryChannel, 0);
-    }
-
-    /**
-     * Add message to the queue broker
-     * 
-     * @param string $message
-     */
-    protected function queue($message)
-    {
-        $this->predisClient->lpush($this->channel, $message);
     }
 
     /**
