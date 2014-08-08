@@ -1,7 +1,7 @@
 redis-broker
 ============
 
-Redis messsage broker writing in PHP
+PHP Redis message broker
 
 ### Installation
 
