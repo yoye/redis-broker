@@ -57,7 +57,7 @@ string(11) "foo.channel"
 string(17) "This is a message"
 ```
 
-You can also set a limit of repetition, if this limit is reached, a new event will be launched.
+You can also set a repetition limit's, if this limit is reached, a new event will be launched.
 
 ```php
 $client     = new Client('tcp://localhost:6379');
