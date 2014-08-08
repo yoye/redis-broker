@@ -59,7 +59,7 @@ string(17) "This is a message"
 
 You can also set a limit of repetition, if this limit is reached, a new event will be launched.
 
-```
+```php
 $client     = new Client('tcp://localhost:6379');
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $event) {
