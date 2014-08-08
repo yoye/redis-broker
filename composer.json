@@ -1,6 +1,6 @@
 {
     "name": "yoye/redis-broker",
-    "description": "Redis messsage broker writing in PHP",
+    "description": "PHP Redis message broker",
     "require": {
         "symfony/event-dispatcher": "~2.3",
         "predis/predis": "~0.8",
