@@ -5,14 +5,11 @@ namespace Yoye\Broker;
 use Predis\Client;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Yoye\Broker\Event\BrokerEvents;
+use Yoye\Broker\Event\MessageEvent;
 
 class Broker
 {
-    /**
-     * Event name for new message received 
-     */
-
-    const MESSAGE_RECEIVED = 'redis-broker.message.received';
 
     /**
      * @var Client
@@ -36,6 +33,11 @@ class Broker
      */
     private $eventDispatcher;
 
+    /**
+     * @var integer
+     */
+    private $nestingLimit;
+
     function __construct(Client $predisClient, $channel, EventDispatcherInterface $eventDispatcher = null)
     {
         if ($eventDispatcher === null) {
@@ -46,6 +48,18 @@ class Broker
         $this->channel          = $channel;
         $this->temporaryChannel = $channel . '.temporary';
         $this->eventDispatcher  = $eventDispatcher;
+    }
+
+    /**
+     * Set the nesting limit,
+     * If this value is defined, a message will not be treated over this limit,
+     * even if the events are not set as done.
+     * 
+     * @param integer $nestingLimit
+     */
+    public function setNestingLimit($nestingLimit)
+    {
+        $this->nestingLimit = $nestingLimit;
     }
 
     /**
@@ -76,12 +90,17 @@ class Broker
 
         while (true) {
             $message = $this->listen();
-            $event   = new MessageEvent($this->channel, $message);
+            $event   = new MessageEvent($this->channel, $message->getData());
 
-            $this->eventDispatcher->dispatch(self::MESSAGE_RECEIVED, $event);
+            $this->eventDispatcher->dispatch(BrokerEvents::MESSAGE_RECEIVED, $event);
 
             if (!$event->isDone()) {
-                $this->queue($message);
+                if ($this->nestingLimit !== null && $this->nestingLimit === $this->predisClient->incr($message->getUuid())) {
+                    $this->eventDispatcher->dispatch(BrokerEvents::NESTING_LIMIT, $event);
+                    $this->predisClient->del($message->getUuid());
+                } else {
+                    $this->predisClient->lpush($this->channel, $message);
+                }
             }
 
             $this->removeTemporary($message);
@@ -91,9 +110,21 @@ class Broker
     /**
      * Add message to the queue broker
      * 
-     * @param string $message
+     * @param string $data
      */
-    public function queue($message)
+    public function queue($data)
+    {
+        $message = new Message($data);
+
+        $this->push($message);
+    }
+
+    /**
+     * Push the message to the queue
+     * 
+     * @param \Yoye\Broker\Message $message
+     */
+    protected function push(Message $message)
     {
         $this->predisClient->lpush($this->channel, $message);
     }
@@ -105,7 +136,33 @@ class Broker
      */
     protected function listen()
     {
-        return $this->predisClient->brpoplpush($this->channel, $this->temporaryChannel, 0);
+        $json = $this->predisClient->brpoplpush($this->channel, $this->temporaryChannel, 0);
+        $data = json_decode($json, true);
+
+        if ($data === null) {
+            return $this->createMessage($json);
+        }
+
+        if (array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
+            return new Message($data['data'], $data['uuid']);
+        }
+
+        return $this->createMessage($json);
+    }
+
+    /**
+     * This will replace a message in the temporary list by a new one with an uuid
+     * 
+     * @param string $data
+     * @return \Yoye\Broker\Message
+     */
+    protected function createMessage($data)
+    {
+        $this->removeTemporary($data);
+        $message = new Message($data);
+        $this->predisClient->lpush($this->temporaryChannel, $message);
+
+        return $message;
     }
 
     /**

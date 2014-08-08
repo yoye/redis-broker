@@ -1,6 +1,6 @@
 <?php
 
-namespace Yoye\Broker;
+namespace Yoye\Broker\Event;
 
 use Symfony\Component\EventDispatcher\Event;
 
@@ -16,6 +16,10 @@ class MessageEvent extends Event
      * @var string
      */
     private $message;
+    
+    /**
+     * @var boolean
+     */
     private $done;
 
     function __construct($channel, $message)
