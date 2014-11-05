@@ -25,7 +25,7 @@ class BrokerTest extends \PHPUnit_Framework_TestCase
 
     public function testQueue()
     {
-        $this->broker->queue('FooBar');
+        $this->broker->queue('FooBar', 'foo.bar');
         $message = $this->redis->rpop('foo.bar');
         $this->assertInstanceOf('Yoye\\Broker\\Message', $message);
         $this->assertEquals('FooBar', $message->getData());
@@ -39,7 +39,7 @@ class BrokerTest extends \PHPUnit_Framework_TestCase
         $this->redis->lpush('foo.bar.temporary', 'Foo');
         $this->assertEquals('Foo', $this->redis->rpop('foo.bar.temporary'));
 
-        $method->invoke($this->broker, 'Foo');
+        $method->invoke($this->broker, 'Foo', 'foo.bar');
 
         $this->assertNull($this->redis->rpop('foo.bar.temporary'));
     }
