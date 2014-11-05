@@ -110,22 +110,24 @@ class Broker
      * Add message to the queue broker
      * 
      * @param string $data
+     * @param string $channel
      */
-    public function queue($data)
+    public function queue($data, $channel)
     {
         $message = new Message($data);
 
-        $this->push($message);
+        $this->push($message, $channel);
     }
 
     /**
      * Push the message to the queue
      * 
      * @param \Yoye\Broker\Message $message
+     * @param string $channel
      */
-    protected function push(Message $message)
+    protected function push(Message $message, $channel)
     {
-        $this->predisClient->lpush($this->channel, $message);
+        $this->predisClient->lpush($channel, $message);
     }
 
     /**
