@@ -45,7 +45,7 @@ class Broker
         }
 
         $this->predisClient    = $predisClient;
-        $this->channels        = $channels;
+        $this->channels        = (array) $channels;
         $this->eventDispatcher = $eventDispatcher;
     }
 
