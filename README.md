@@ -27,20 +27,24 @@ use Yoye\Broker\Broker;
 use Yoye\Broker\Event\BrokerEvents;
 use Yoye\Broker\Event\MessageEvent;
 
-$client     = new Client('tcp://localhost:6379');
+$client     = new Client([
+    'host'               => 'localhost',
+    'port'               => '6379',
+    'read_write_timeout' => -1
+    ]);
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $event) {
         $channel = $event->getChannel();
         $message = $event->getMessage();
 
         var_dump($channel, $message);
-        
+
         // The event must be marked has done 
         // otherwise the listener will be called indefinitely
         $event->setDone();
-    });
+});
 
-$broker = new Broker($client, 'foo.channel', $dispatcher);
+$broker = new Broker($client, ['foo.channel', 'bar.channel'], $dispatcher);
 $broker->run();
 ```
 
@@ -50,7 +54,7 @@ Now type in your console
 php broker.php
 ```
 
-On another console type `redis-cli LPUSH foo.channel 'This is a message'`, on your first console you should see:
+On another console type `redis-cli LPUSH foo.channel 'This is a message'` or ``redis-cli LPUSH bar.channel 'This is a message'``, on your first console you should see:
 
 ```
 string(11) "foo.channel"
@@ -60,20 +64,23 @@ string(17) "This is a message"
 You can also set a repetition limit's, if this limit is reached, a new event will be launched.
 
 ```php
-$client     = new Client('tcp://localhost:6379');
+$client     = new Client([
+    'host'               => 'localhost',
+    'port'               => '6379',
+    'read_write_timeout' => -1
+    ]);
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $event) {
-        var_dump($event->getMessage());
-
-        if ($event->getMessage() === 'FooBar') {
-            $event->setDone();
-        }
-    });
+    var_dump($event->getMessage());
+    if ($event->getMessage() === 'FooBar') {
+        $event->setDone();
+    }
+});
 $dispatcher->addListener(BrokerEvents::NESTING_LIMIT, function(MessageEvent $event) {
-        var_dump('Last call for: ' . $event->getMessage());
-    });
+    var_dump('Last call for: ' . $event->getMessage());
+});
 
-$broker = new Broker($client, 'foo.channel', $dispatcher);
+$broker = new Broker($client, ['foo.channel', 'bar.channel'], $dispatcher);
 $broker->setNestingLimit(3);
 $broker->run();
 ```

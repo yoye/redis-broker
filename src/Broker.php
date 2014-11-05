@@ -17,9 +17,9 @@ class Broker
     private $predisClient;
 
     /**
-     * @var string
+     * @var array
      */
-    private $channel;
+    private $channels;
 
     /**
      * Used for temporary value
@@ -38,16 +38,15 @@ class Broker
      */
     private $nestingLimit;
 
-    function __construct(Client $predisClient, $channel, EventDispatcherInterface $eventDispatcher = null)
+    function __construct(Client $predisClient, $channels, EventDispatcherInterface $eventDispatcher = null)
     {
         if ($eventDispatcher === null) {
             $eventDispatcher = new EventDispatcher();
         }
 
-        $this->predisClient     = $predisClient;
-        $this->channel          = $channel;
-        $this->temporaryChannel = $channel . '.temporary';
-        $this->eventDispatcher  = $eventDispatcher;
+        $this->predisClient    = $predisClient;
+        $this->channels        = $channels;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -89,8 +88,8 @@ class Broker
         $this->flushTemporary();
 
         while (true) {
-            $message = $this->listen();
-            $event   = new MessageEvent($this->channel, $message->getData());
+            list($channel, $message) = $this->listen();
+            $event = new MessageEvent($channel, $message->getData());
 
             $this->eventDispatcher->dispatch(BrokerEvents::MESSAGE_RECEIVED, $event);
 
@@ -99,11 +98,11 @@ class Broker
                     $this->eventDispatcher->dispatch(BrokerEvents::NESTING_LIMIT, $event);
                     $this->predisClient->del($message->getUuid());
                 } else {
-                    $this->predisClient->lpush($this->channel, $message);
+                    $this->predisClient->lpush($channel, $message);
                 }
             }
 
-            $this->removeTemporary($message);
+            $this->removeTemporary($message, $channel);
         }
     }
 
@@ -132,35 +131,39 @@ class Broker
     /**
      * Listen on channel
      * 
-     * @return mixed
+     * @return array
      */
     protected function listen()
     {
-        $json = $this->predisClient->brpoplpush($this->channel, $this->temporaryChannel, 0);
+        list($channel, $json) = $this->predisClient->brpop($this->channels, 0);
+        $this->predisClient->lpush($this->getTemporaryChannel($channel), $json);
+
         $data = json_decode($json, true);
 
-        if ($data === null) {
-            return $this->createMessage($json);
+        if ($data !== null && array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
+            $message = new Message($data['data'], $data['uuid']);
+        } else {
+            $message = $this->buildMessage($json, $channel);
         }
 
-        if (array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
-            return new Message($data['data'], $data['uuid']);
-        }
-
-        return $this->createMessage($json);
+        return [
+            $channel,
+            $message,
+        ];
     }
 
     /**
      * This will replace a message in the temporary list by a new one with an uuid
      * 
      * @param string $data
+     * @param string $channel
      * @return \Yoye\Broker\Message
      */
-    protected function createMessage($data)
+    protected function buildMessage($data, $channel)
     {
-        $this->removeTemporary($data);
+        $this->removeTemporary($data, $channel);
         $message = new Message($data);
-        $this->predisClient->lpush($this->temporaryChannel, $message);
+        $this->predisClient->lpush($this->getTemporaryChannel($channel), $message);
 
         return $message;
     }
@@ -169,10 +172,11 @@ class Broker
      * Remove a message from the temporary channel
      * 
      * @param string $message
+     * @param string $channel
      */
-    protected function removeTemporary($message)
+    protected function removeTemporary($message, $channel)
     {
-        $this->predisClient->lrem($this->temporaryChannel, 0, $message);
+        $this->predisClient->lrem($this->getTemporaryChannel($channel), 0, $message);
     }
 
     /**
@@ -180,9 +184,16 @@ class Broker
      */
     protected function flushTemporary()
     {
-        do {
-            $message = $this->predisClient->rpoplpush($this->temporaryChannel, $this->channel);
-        } while ($message !== null);
+        foreach ($this->channels as $channel) {
+            do {
+                $message = $this->predisClient->rpoplpush($this->getTemporaryChannel($channel), $channel);
+            } while ($message !== null);
+        }
+    }
+
+    private function getTemporaryChannel($channel)
+    {
+        return sprintf('%s.temporary', $channel);
     }
 
 }
