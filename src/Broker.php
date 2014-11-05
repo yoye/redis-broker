@@ -142,7 +142,7 @@ class Broker
 
         $data = json_decode($json, true);
 
-        if ($data !== null && array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
+        if (is_array($data) && array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
             $message = new Message($data['data'], $data['uuid']);
         } else {
             $message = $this->buildMessage($json, $channel);
