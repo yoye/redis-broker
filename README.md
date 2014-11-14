@@ -8,7 +8,7 @@ PHP Redis message broker
 The recommended way to install redis-broker is through [Composer](http://getcomposer.org/)
 
 ```
-composer require "yoye/redis-broker": "dev-master"
+composer require "yoye/redis-broker" "dev-master"
 composer update betacie/redis-broker
 ```
 
