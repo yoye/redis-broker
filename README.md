@@ -9,7 +9,7 @@ The recommended way to install redis-broker is through [Composer](http://getcomp
 
 ```
 composer require "yoye/redis-broker" "dev-master"
-composer update betacie/redis-broker
+composer update yoye/redis-broker
 ```
 
 ### Usage
