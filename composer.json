@@ -21,5 +21,8 @@
         "psr-4": {
             "Yoye\\Broker\\": "src/"
         }
+    },
+    "archive": {
+        "exclude": ["/tests", "phpunit.xml.dist"]
     }
 }
