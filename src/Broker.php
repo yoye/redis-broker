@@ -2,9 +2,9 @@
 
 namespace Yoye\Broker;
 
-use Predis\Client;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Yoye\Broker\Adapter\AdapterInterface;
 use Yoye\Broker\Event\BrokerEvents;
 use Yoye\Broker\Event\MessageEvent;
 
@@ -12,9 +12,9 @@ class Broker
 {
 
     /**
-     * @var Client
+     * @var AdapterInterface
      */
-    private $predisClient;
+    private $client;
 
     /**
      * @var array
@@ -38,13 +38,13 @@ class Broker
      */
     private $nestingLimit;
 
-    function __construct(Client $predisClient, $channels, EventDispatcherInterface $eventDispatcher = null)
+    function __construct(AdapterInterface $client, $channels, EventDispatcherInterface $eventDispatcher = null)
     {
         if ($eventDispatcher === null) {
             $eventDispatcher = new EventDispatcher();
         }
 
-        $this->predisClient    = $predisClient;
+        $this->client          = $client;
         $this->channels        = (array) $channels;
         $this->eventDispatcher = $eventDispatcher;
     }
@@ -94,11 +94,11 @@ class Broker
             $this->eventDispatcher->dispatch(BrokerEvents::MESSAGE_RECEIVED, $event);
 
             if (!$event->isDone()) {
-                if ($this->nestingLimit !== null && $this->nestingLimit === $this->predisClient->incr($message->getUuid())) {
+                if ($this->nestingLimit !== null && $this->nestingLimit === $this->client->incr($message->getUuid())) {
                     $this->eventDispatcher->dispatch(BrokerEvents::NESTING_LIMIT, $event);
-                    $this->predisClient->del($message->getUuid());
+                    $this->client->del($message->getUuid());
                 } else {
-                    $this->predisClient->lpush($channel, $message);
+                    $this->client->lpush($channel, $message);
                 }
             }
 
@@ -127,7 +127,7 @@ class Broker
      */
     protected function push(Message $message, $channel)
     {
-        $this->predisClient->lpush($channel, $message);
+        $this->client->lpush($channel, $message);
     }
 
     /**
@@ -137,12 +137,13 @@ class Broker
      */
     protected function listen()
     {
-        list($channel, $json) = $this->predisClient->brpop($this->channels, 0);
-        $this->predisClient->lpush($this->getTemporaryChannel($channel), $json);
+        list($channel, $json) = $this->client->brpop($this->channels, 0);
+
+        $this->client->lpush($this->getTemporaryChannel($channel), $json);
 
         $data = json_decode($json, true);
 
-        if ($data !== null && array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
+        if (is_array($data) && array_key_exists('uuid', $data) && array_key_exists('data', $data)) {
             $message = new Message($data['data'], $data['uuid']);
         } else {
             $message = $this->buildMessage($json, $channel);
@@ -165,7 +166,7 @@ class Broker
     {
         $this->removeTemporary($data, $channel);
         $message = new Message($data);
-        $this->predisClient->lpush($this->getTemporaryChannel($channel), $message);
+        $this->client->lpush($this->getTemporaryChannel($channel), $message);
 
         return $message;
     }
@@ -178,7 +179,7 @@ class Broker
      */
     protected function removeTemporary($message, $channel)
     {
-        $this->predisClient->lrem($this->getTemporaryChannel($channel), 0, $message);
+        $this->client->lrem($this->getTemporaryChannel($channel), 0, $message);
     }
 
     /**
@@ -188,8 +189,8 @@ class Broker
     {
         foreach ($this->channels as $channel) {
             do {
-                $message = $this->predisClient->rpoplpush($this->getTemporaryChannel($channel), $channel);
-            } while ($message !== null);
+                $message = $this->client->rpoplpush($this->getTemporaryChannel($channel), $channel);
+            } while ($message !== false);
         }
     }
 

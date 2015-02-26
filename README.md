@@ -19,19 +19,17 @@ composer update betacie/redis-broker
 
 // broker.php
 
-require_once __DIR__ . '/vendor/autoload.php';
+require_once __DIR__ . '/../vendor/autoload.php';
 
-use Predis\Client;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Yoye\Broker\Adapter\PhpRedisAdapter;
 use Yoye\Broker\Broker;
 use Yoye\Broker\Event\BrokerEvents;
 use Yoye\Broker\Event\MessageEvent;
 
-$client     = new Client([
-    'host'               => 'localhost',
-    'port'               => '6379',
-    'read_write_timeout' => -1
-    ]);
+$client = new Redis();
+$client->connect('127.0.0.1', 6379, 0);
+$adapter = new PhpRedisAdapter($client);
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $event) {
         $channel = $event->getChannel();
@@ -44,7 +42,7 @@ $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $
         $event->setDone();
 });
 
-$broker = new Broker($client, ['foo.channel', 'bar.channel'], $dispatcher);
+$broker = new Broker($adapter, ['foo.channel', 'bar.channel'], $dispatcher);
 $broker->run();
 ```
 
@@ -64,11 +62,9 @@ string(17) "This is a message"
 You can also set a repetition limit's, if this limit is reached, a new event will be launched.
 
 ```php
-$client     = new Client([
-    'host'               => 'localhost',
-    'port'               => '6379',
-    'read_write_timeout' => -1
-    ]);
+$client = new Redis();
+$client->connect('127.0.0.1', 6379, 0);
+$adapter = new PhpRedisAdapter($client);
 $dispatcher = new EventDispatcher();
 $dispatcher->addListener(BrokerEvents::MESSAGE_RECEIVED, function(MessageEvent $event) {
     var_dump($event->getMessage());
@@ -80,7 +76,7 @@ $dispatcher->addListener(BrokerEvents::NESTING_LIMIT, function(MessageEvent $eve
     var_dump('Last call for: ' . $event->getMessage());
 });
 
-$broker = new Broker($client, ['foo.channel', 'bar.channel'], $dispatcher);
+$broker = new Broker($adapter, ['foo.channel', 'bar.channel'], $dispatcher);
 $broker->setNestingLimit(3);
 $broker->run();
 ```

@@ -13,7 +13,7 @@ class BrokerTest extends \PHPUnit_Framework_TestCase
     public function setUp()
     {
         $factory      = new RedisMockFactory();
-        $this->redis  = $factory->getAdapter('Predis\Client', true);
+        $this->redis  = $factory->getAdapter('Yoye\Broker\Adapter\PredisAdapter', true);
         $this->broker = new Broker($this->redis, 'foo.bar');
     }
 
