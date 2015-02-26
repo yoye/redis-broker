@@ -22,13 +22,6 @@ class Broker
     private $channels;
 
     /**
-     * Used for temporary value
-     * 
-     * @var string
-     */
-    private $temporaryChannel;
-
-    /**
      * @var EventDispatcherInterface
      */
     private $eventDispatcher;
@@ -47,6 +40,18 @@ class Broker
         $this->client          = $client;
         $this->channels        = (array) $channels;
         $this->eventDispatcher = $eventDispatcher;
+    }
+
+    /**
+     * Add a new channel to listen
+     * 
+     * @param string $channel
+     */
+    public function addChannel($channel)
+    {
+        if (!in_array($channel, $this->channels)) {
+            $this->channels[] = $channel;
+        }
     }
 
     /**
