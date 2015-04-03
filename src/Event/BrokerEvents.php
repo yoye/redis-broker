@@ -4,15 +4,13 @@ namespace Yoye\Broker\Event;
 
 class BrokerEvents
 {
-
     /**
-     * Event name for new message received 
+     * Event name for new message received.
      */
     const MESSAGE_RECEIVED = 'redis-broker.message.received';
 
     /**
-     * A message has been repeated too many time
+     * A message has been repeated too many time.
      */
     const NESTING_LIMIT = 'redis-broker.message.nesting-limit';
-
 }

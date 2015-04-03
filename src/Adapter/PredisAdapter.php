@@ -6,7 +6,6 @@ use Predis\Client;
 
 class PredisAdapter implements AdapterInterface
 {
-
     /**
      * @var Client
      */
@@ -45,8 +44,7 @@ class PredisAdapter implements AdapterInterface
     public function rpoplpush($source, $destination)
     {
         $value = $this->client->rpoplpush($source, $destination);
-        
+
         return $value === null ? false : $value;
     }
-
 }

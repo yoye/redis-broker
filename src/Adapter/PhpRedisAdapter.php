@@ -4,7 +4,6 @@ namespace Yoye\Broker\Adapter;
 
 class PhpRedisAdapter implements AdapterInterface
 {
-
     /**
      * @var \Redis
      */
@@ -44,5 +43,4 @@ class PhpRedisAdapter implements AdapterInterface
     {
         return $this->client->rpoplpush($source, $destination);
     }
-
 }

@@ -6,7 +6,6 @@ use M6Web\Component\RedisMock\RedisMockFactory;
 
 class BrokerTest extends \PHPUnit_Framework_TestCase
 {
-
     private $redis;
     private $broker;
 
@@ -43,5 +42,4 @@ class BrokerTest extends \PHPUnit_Framework_TestCase
 
         $this->assertNull($this->redis->rpop('foo.bar.temporary'));
     }
-
 }

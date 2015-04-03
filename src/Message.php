@@ -6,7 +6,6 @@ use Rhumsaa\Uuid\Uuid;
 
 class Message
 {
-
     /**
      * @var string
      */
@@ -17,9 +16,9 @@ class Message
      */
     private $data;
 
-    function __construct($data, $uuid = null)
+    public function __construct($data, $uuid = null)
     {
-        $this->uuid = $uuid ? : (string) Uuid::uuid1();
+        $this->uuid = $uuid ?: (string) Uuid::uuid1();
         $this->data = $data;
     }
 
@@ -40,5 +39,4 @@ class Message
             'data' => $this->data,
         ));
     }
-
 }

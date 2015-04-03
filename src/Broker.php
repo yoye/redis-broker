@@ -10,7 +10,6 @@ use Yoye\Broker\Event\MessageEvent;
 
 class Broker
 {
-
     /**
      * @var AdapterInterface
      */
@@ -31,7 +30,7 @@ class Broker
      */
     private $nestingLimit;
 
-    function __construct(AdapterInterface $client, $channels, EventDispatcherInterface $eventDispatcher = null)
+    public function __construct(AdapterInterface $client, $channels, EventDispatcherInterface $eventDispatcher = null)
     {
         if ($eventDispatcher === null) {
             $eventDispatcher = new EventDispatcher();
@@ -43,8 +42,8 @@ class Broker
     }
 
     /**
-     * Add a new channel to listen
-     * 
+     * Add a new channel to listen.
+     *
      * @param string $channel
      */
     public function addChannel($channel)
@@ -58,7 +57,7 @@ class Broker
      * Set the nesting limit,
      * If this value is defined, a message will not be treated over this limit,
      * even if the events are not set as done.
-     * 
+     *
      * @param integer $nestingLimit
      */
     public function setNestingLimit($nestingLimit)
@@ -67,8 +66,8 @@ class Broker
     }
 
     /**
-     * Get Event Dispatcher
-     * 
+     * Get Event Dispatcher.
+     *
      * @return EventDispatcherInterface
      */
     public function getEventDispatcher()
@@ -79,13 +78,13 @@ class Broker
     /**
      * Run broker
      * First flush temporary queue in case of crash
-     * Listen on broker channel with a blocking action then push a message 
-     * in a temporary queue to prevent crash and create a restoration action
-     * 
+     * Listen on broker channel with a blocking action then push a message
+     * in a temporary queue to prevent crash and create a restoration action.
+     *
      * When a message is received emit a MessageEvent
-     * 
+     *
      * If job is not done, we requeue the message
-     * 
+     *
      * Finally we remove message from temporary queue
      */
     public function run()
@@ -112,8 +111,8 @@ class Broker
     }
 
     /**
-     * Add message to the queue broker
-     * 
+     * Add message to the queue broker.
+     *
      * @param string $data
      * @param string $channel
      */
@@ -125,19 +124,19 @@ class Broker
     }
 
     /**
-     * Push the message to the queue
-     * 
+     * Push the message to the queue.
+     *
      * @param \Yoye\Broker\Message $message
-     * @param string $channel
+     * @param string               $channel
      */
     protected function push(Message $message, $channel)
     {
-        $this->client->lpush($channel, $message);
+        $this->client->lpush($channel, (string) $message);
     }
 
     /**
-     * Listen on channel
-     * 
+     * Listen on channel.
+     *
      * @return array
      */
     protected function listen()
@@ -161,24 +160,25 @@ class Broker
     }
 
     /**
-     * This will replace a message in the temporary list by a new one with an uuid
-     * 
+     * This will replace a message in the temporary list by a new one with an uuid.
+     *
      * @param string $data
      * @param string $channel
+     *
      * @return \Yoye\Broker\Message
      */
     protected function buildMessage($data, $channel)
     {
         $this->removeTemporary($data, $channel);
         $message = new Message($data);
-        $this->client->lpush($this->getTemporaryChannel($channel), $message);
+        $this->client->lpush($this->getTemporaryChannel($channel), (string) $message);
 
         return $message;
     }
 
     /**
-     * Remove a message from the temporary channel
-     * 
+     * Remove a message from the temporary channel.
+     *
      * @param string $message
      * @param string $channel
      */
@@ -188,7 +188,7 @@ class Broker
     }
 
     /**
-     * Flush temporary queue
+     * Flush temporary queue.
      */
     protected function flushTemporary()
     {
@@ -203,5 +203,4 @@ class Broker
     {
         return sprintf('%s.temporary', $channel);
     }
-
 }

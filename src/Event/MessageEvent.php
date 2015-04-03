@@ -6,7 +6,6 @@ use Symfony\Component\EventDispatcher\Event;
 
 class MessageEvent extends Event
 {
-
     /**
      * @var string
      */
@@ -16,13 +15,13 @@ class MessageEvent extends Event
      * @var string
      */
     private $message;
-    
+
     /**
      * @var boolean
      */
     private $done;
 
-    function __construct($channel, $message)
+    public function __construct($channel, $message)
     {
         $this->channel = $channel;
         $this->message = $message;
@@ -48,5 +47,4 @@ class MessageEvent extends Event
     {
         return $this->done;
     }
-
 }
