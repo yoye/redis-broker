@@ -103,7 +103,7 @@ class Broker
                     $this->eventDispatcher->dispatch(BrokerEvents::NESTING_LIMIT, $event);
                     $this->client->del($message->getUuid());
                 } else {
-                    $this->client->lpush($channel, $message);
+                    $this->client->lpush($channel, (string) $message);
                 }
             }
 
