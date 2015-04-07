@@ -10,6 +10,7 @@ use Yoye\Broker\Event\MessageEvent;
 
 class Broker
 {
+
     /**
      * @var AdapterInterface
      */
@@ -184,7 +185,7 @@ class Broker
      */
     protected function removeTemporary($message, $channel)
     {
-        $this->client->lrem($this->getTemporaryChannel($channel), 0, $message);
+        $this->client->lrem($this->getTemporaryChannel($channel), 0, (string) $message);
     }
 
     /**
@@ -203,4 +204,5 @@ class Broker
     {
         return sprintf('%s.temporary', $channel);
     }
+
 }
