@@ -2,7 +2,7 @@
     "name": "yoye/redis-broker",
     "description": "PHP Redis message broker",
     "require": {
-        "symfony/event-dispatcher": "~2.3",
+        "symfony/event-dispatcher": "~2.3|~3.0",
         "predis/predis": "~0.8",
         "ramsey/uuid": "~2.7"
     },
