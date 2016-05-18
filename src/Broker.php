@@ -10,27 +10,33 @@ use Yoye\Broker\Event\MessageEvent;
 
 class Broker
 {
-
     /**
      * @var AdapterInterface
      */
-    private $client;
+    protected $client;
 
     /**
      * @var array
      */
-    private $channels;
+    protected $channels;
 
     /**
      * @var EventDispatcherInterface
      */
-    private $eventDispatcher;
+    protected $eventDispatcher;
 
     /**
      * @var integer
      */
-    private $nestingLimit;
+    protected $nestingLimit;
 
+    /**
+     * Broker constructor.
+     *
+     * @param AdapterInterface $client
+     * @param $channels
+     * @param EventDispatcherInterface|null $eventDispatcher
+     */
     public function __construct(AdapterInterface $client, $channels, EventDispatcherInterface $eventDispatcher = null)
     {
         if ($eventDispatcher === null) {
@@ -200,9 +206,13 @@ class Broker
         }
     }
 
-    private function getTemporaryChannel($channel)
+    /**
+     * @param string $channel
+     *
+     * @return string
+     */
+    protected function getTemporaryChannel($channel)
     {
         return sprintf('%s.temporary', $channel);
     }
-
 }
