@@ -4,7 +4,6 @@ namespace Yoye\Broker\Adapter;
 
 class PhpRedisAdapter implements AdapterInterface
 {
-
     /**
      * @var \Redis
      */
@@ -13,6 +12,11 @@ class PhpRedisAdapter implements AdapterInterface
     public function __construct(\Redis $client)
     {
         $this->client = $client;
+    }
+
+    public function rpop($channel)
+    {
+        return $this->client->rPop($channel);
     }
 
     public function brpop($channel, $timeout)

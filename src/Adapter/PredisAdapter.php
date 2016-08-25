@@ -16,6 +16,11 @@ class PredisAdapter implements AdapterInterface
         $this->client = $client;
     }
 
+    public function rpop($channel)
+    {
+        return $this->client->rpop($channel);
+    }
+
     public function brpop($channel, $timeout)
     {
         return $this->client->brpop($channel, $timeout);
