@@ -3,7 +3,7 @@
     "description": "PHP Redis message broker",
     "require": {
         "symfony/event-dispatcher": "~2.3|~3.0",
-        "predis/predis": "~0.8",
+        "predis/predis": "~0.8|~1.0",
         "ramsey/uuid": "~2.7"
     },
     "require-dev": {
